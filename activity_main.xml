@@ -10,6 +10,7 @@
         android:id="@+id/constraintLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="#FDFDFD"
         android:padding="24dp"
         app:layout_anchor="@+id/constraintLayout"
         app:layout_anchorGravity="center">
@@ -21,7 +22,7 @@
             android:layout_marginTop="8dp"
             android:paddingTop="20dp"
             android:text="TasteTest"
-            android:textColor="#0F3353"
+            android:textColor="#103859"
             android:textSize="32sp"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
@@ -52,20 +53,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/appTitle" />
-
-        <Button
-            android:id="@+id/btnProfile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#6AB241"
-            android:text="Moj profil"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btnViewReviews"
-            app:layout_constraintVertical_bias="0.106" />
 
         <ImageView
             android:id="@+id/imageView5"
@@ -98,6 +85,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        android:background="?android:attr/windowBackground"
+        app:itemIconTint="#103859"
+        app:itemTextColor="#103859"
         app:menu="@menu/bottom_nav_menu" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
