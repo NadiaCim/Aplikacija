@@ -20,34 +20,35 @@ public class MainActivity extends AppCompatActivity {
 
         btnFindRestaurants = findViewById(R.id.btnFindRestaurants);
         btnViewReviews = findViewById(R.id.btnViewReviews);
-        btnProfile = findViewById(R.id.btnProfile);
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
         btnFindRestaurants.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SearchActivity.class)));
 
-        btnViewReviews.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, ReviewsActivity.class)));
 
-        btnProfile.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, ProfileActivity.class)));
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        // Umjesto switch-case koristimo if-else
+        // Ovdje možeš prikazati ime korisnika ako koristiš SharedPreferences
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+
         bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
+            int id = item.getItemId();
 
-            if (itemId == R.id.nav_search) {
-                startActivity(new Intent(MainActivity.this, SearchActivity.class));
+            if (id == R.id.nav_home) {
+                // Trenutna aktivnost
                 return true;
-            } else if (itemId == R.id.nav_reviews) {
-                startActivity(new Intent(MainActivity.this, ReviewsActivity.class));
+            } else if (id == R.id.nav_search) {
+                startActivity(new Intent(this, SearchActivity.class));
                 return true;
-            } else if (itemId == R.id.nav_profile) {
-                startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(this, LoginActivity.class));
                 return true;
             }
 
             return false;
         });
+
+
     }
 }
