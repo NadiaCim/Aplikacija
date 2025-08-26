@@ -1,86 +1,83 @@
 package com.example.androidproject;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.androidproject.db.DatabaseHelper;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-
+import java.util.ArrayList;
 import java.util.List;
+
+// ✅ VAŽNO: importaj DatabaseHelper iz paketa db
+import com.example.androidproject.db.DatabaseHelper;
 
 public class SearchActivity extends AppCompatActivity {
 
-    EditText etSearchQuery, etLocation;
-    Spinner spinnerCategory;
-    Button btnSearch;
-    RecyclerView recyclerView;
+    private EditText etLocation;
+    private Spinner spinnerCategory;
+    private Button btnSearch;
+    private RecyclerView recyclerView;
+    private TextView tvEmpty;
 
-    DatabaseHelper dbHelper;
-    RestaurantAdapter adapter;
-    BottomNavigationView bottomNavigationView;
+    private RestaurantAdapter adapter;
+    private List<Restaurant> allRestaurants = new ArrayList<>();
+
+    private DatabaseHelper dbHelper; // ✅ polje za bazu
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-        etSearchQuery = findViewById(R.id.etSearchQuery);
-        etLocation = findViewById(R.id.etLocation);  // novo polje
+        // Povezivanje s XML komponentama
+        etLocation = findViewById(R.id.etLocation);
         spinnerCategory = findViewById(R.id.spinnerCategory);
         btnSearch = findViewById(R.id.btnSearch);
         recyclerView = findViewById(R.id.recyclerView);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-
-        dbHelper = new DatabaseHelper(this);
-
-        // Spinner setup
-        String[] categories = {"Sve", "Burgeri", "Piletina", "Meksička", "Vegetarijanska"};
-        ArrayAdapter<String> adapterSpinner = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, categories);
-        spinnerCategory.setAdapter(adapterSpinner);
+        tvEmpty = findViewById(R.id.tvEmpty);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        btnSearch.setOnClickListener(v -> {
-            String query = etSearchQuery.getText().toString().trim();
-            String location = etLocation.getText().toString().trim();
-            String selectedType = spinnerCategory.getSelectedItem().toString();
+        // ✅ Inicijalizacija baze i dohvat podataka
+        dbHelper = new DatabaseHelper(this);
+        allRestaurants = dbHelper.getAllRestaurants();
 
-            List<String> results = dbHelper.searchRestaurants(query, selectedType, location);
+        // Adapter i prikaz
+        adapter = new RestaurantAdapter(allRestaurants);
+        recyclerView.setAdapter(adapter);
+        tvEmpty.setVisibility(allRestaurants.isEmpty() ? View.VISIBLE : View.GONE);
 
-            if (results.isEmpty()) {
-                Toast.makeText(this, "Nema rezultata", Toast.LENGTH_SHORT).show();
+        // Logika pretrage
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String location = etLocation.getText().toString().trim();
+                String category = spinnerCategory.getSelectedItem() != null
+                        ? spinnerCategory.getSelectedItem().toString()
+                        : "";
+
+                List<Restaurant> filtered = new ArrayList<>();
+                for (Restaurant r : allRestaurants) {
+                    boolean matchLocation = location.isEmpty()
+                            || (r.getLocation() != null && r.getLocation().equalsIgnoreCase(location));
+                    boolean matchCategory = category.isEmpty()
+                            || category.equalsIgnoreCase("Svi")
+                            || (r.getType() != null && r.getType().equalsIgnoreCase(category));
+
+                    if (matchLocation && matchCategory) {
+                        filtered.add(r);
+                    }
+                }
+
+                adapter.updateData(filtered);
+                tvEmpty.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
             }
-
-            adapter = new RestaurantAdapter(results);
-            recyclerView.setAdapter(adapter);
-        });
-
-        // Bottom navigation
-        bottomNavigationView.setSelectedItemId(R.id.nav_search);
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(this, MainActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (id == R.id.nav_search) {
-                return true;
-            } else if (id == R.id.nav_profile) {
-                startActivity(new Intent(this, LoginActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            }
-            return false;
         });
     }
 }
