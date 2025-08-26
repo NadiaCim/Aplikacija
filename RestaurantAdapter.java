@@ -3,6 +3,7 @@ package com.example.androidproject;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,39 +11,53 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.RestaurantViewHolder> {
+public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.ViewHolder> {
 
-    private List<String> restaurantList;
+    private List<Restaurant> restaurants;
 
-    public RestaurantAdapter(List<String> restaurantList) {
-        this.restaurantList = restaurantList;
+    public RestaurantAdapter(List<Restaurant> restaurants) {
+        this.restaurants = restaurants;
+    }
+
+    // ✅ Update liste
+    public void updateData(List<Restaurant> newRestaurants) {
+        this.restaurants = newRestaurants;
+        notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public RestaurantViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
-        return new RestaurantViewHolder(itemView);
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_restaurant, parent, false);
+        return new ViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RestaurantViewHolder holder, int position) {
-        String restaurant = restaurantList.get(position);
-        holder.textView.setText(restaurant);
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Restaurant restaurant = restaurants.get(position);
+        holder.textName.setText(restaurant.getName());
+        holder.textLocation.setText(restaurant.getLocation());
+        holder.textRating.setText("Ocjena: " + restaurant.getRating());
+
+
     }
 
     @Override
     public int getItemCount() {
-        return restaurantList.size();
+        return restaurants != null ? restaurants.size() : 0;
     }
 
-    static class RestaurantViewHolder extends RecyclerView.ViewHolder {
-        TextView textView;
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        ImageView imageRestaurant;
+        TextView textName, textLocation, textRating;
 
-        public RestaurantViewHolder(@NonNull View itemView) {
+        public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            textView = itemView.findViewById(android.R.id.text1);
+            imageRestaurant = itemView.findViewById(R.id.imageRestaurant);
+            textName = itemView.findViewById(R.id.textName);
+            textLocation = itemView.findViewById(R.id.textLocation);
+            textRating = itemView.findViewById(R.id.textRating);
         }
     }
 }
