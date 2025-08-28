@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,97 +19,55 @@ import java.util.List;
 
 public class ReviewsActivity extends AppCompatActivity {
 
-    private RecyclerView rv;
+    private RecyclerView rvTopPerCity;
     private TextView tvEmpty;
     private DatabaseHelper db;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_reviews); // koristi tvoj postojeći layout
 
-        // --- Dinamično pronađi postojeće ID-jeve (izbjegavamo "Cannot resolve symbol") ---
-        rv = findRecycler("rvTopPerCity", "rvTopPerCityNew");
-        tvEmpty = findText("tvEmpty", "tvEmptyNew");
+        setContentView(R.layout.activity_reviews);
 
-        if (rv == null) {
-            Toast.makeText(this, "RecyclerView nije pronađen u activity_reviews.xml", Toast.LENGTH_LONG).show();
-            return;
-        }
+        // View reference
+        rvTopPerCity = findViewById(R.id.rvTopPerCity);
+        tvEmpty = findViewById(R.id.tvEmpty);
 
+        // Data
         db = new DatabaseHelper(this);
+        List<Restaurant> tops = db.fetchTopPerCity(); // #1 po svakom gradu
 
-        // Dohvati #1 restoran po svakom gradu
-        List<Restaurant> tops = db.fetchTopPerCity();
-
+        // prikaži listu ili "nema podataka"
         if (tops == null || tops.isEmpty()) {
-            if (tvEmpty != null) tvEmpty.setVisibility(View.VISIBLE);
-            rv.setVisibility(View.GONE);
+            tvEmpty.setVisibility(View.VISIBLE);
+            rvTopPerCity.setVisibility(View.GONE);
         } else {
-            if (tvEmpty != null) tvEmpty.setVisibility(View.GONE);
-            rv.setVisibility(View.VISIBLE);
-            rv.setLayoutManager(new LinearLayoutManager(this));
-            rv.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-            rv.setAdapter(new RestaurantAdapter(tops));
+            tvEmpty.setVisibility(View.GONE);
+            rvTopPerCity.setVisibility(View.VISIBLE);
+            rvTopPerCity.setLayoutManager(new LinearLayoutManager(this));
+            rvTopPerCity.addItemDecoration(
+                    new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+            rvTopPerCity.setAdapter(new RestaurantAdapter(tops));
         }
 
-        // --- Bottom nav (ako postoji u layoutu) ---
-        BottomNavigationView bottomNav = findBottomNav("bottomNav");
-        if (bottomNav != null) {
-            bottomNav.setOnItemSelectedListener(item -> {
-                int id = item.getItemId();
-                if (id == R.id.nav_home) {
-                    startActivity(new Intent(this, MainActivity.class));
-                    overridePendingTransition(0, 0);
-                    return true;
-                } else if (id == R.id.nav_search) {
-                    startActivity(new Intent(this, SearchActivity.class));
-                    overridePendingTransition(0, 0);
-                    return true;
-                } else if (id == R.id.nav_profile) {
-                    // ako ti je "profil" zapravo LoginActivity, promijeni na LoginActivity.class
-                    startActivity(new Intent(this, LoginActivity.class));
-                    overridePendingTransition(0, 0);
-                    return true;
-                }
-                return false;
-            });
-        }
-    }
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-    // ---------- helpers: sigurni finderi bez compile-time R.id ovisnosti ----------
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
 
-    private RecyclerView findRecycler(String... ids) {
-        for (String id : ids) {
-            int resId = getId(id);
-            if (resId != 0) {
-                RecyclerView v = findViewById(resId);
-                if (v != null) return v;
+            if (id == R.id.nav_home) {
+                startActivity(new Intent(this, MainActivity.class));
+
+                return true;
+            } else if (id == R.id.nav_search) {
+                startActivity(new Intent(this, SearchActivity.class));
+                return true;
+            } else if (id == R.id.nav_profile) {
+                startActivity(new Intent(this, LoginActivity.class));
+                return true;
             }
-        }
-        return null;
-    }
 
-    private TextView findText(String... ids) {
-        for (String id : ids) {
-            int resId = getId(id);
-            if (resId != 0) {
-                TextView v = findViewById(resId);
-                if (v != null) return v;
-            }
-        }
-        return null;
-    }
-
-    private BottomNavigationView findBottomNav(String id) {
-        int resId = getId(id);
-        if (resId != 0) {
-            return findViewById(resId);
-        }
-        return null;
-    }
-
-    private int getId(String idName) {
-        return getResources().getIdentifier(idName, "id", getPackageName());
+            return false;
+        });
     }
 }
