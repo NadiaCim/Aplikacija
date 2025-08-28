@@ -24,11 +24,14 @@ public class MainActivity extends AppCompatActivity {
 
         btnFindRestaurants.setOnClickListener(v ->
                 startActivity(new Intent(MainActivity.this, SearchActivity.class)));
+        btnViewReviews.setOnClickListener(v ->
+                startActivity(new Intent(MainActivity.this, ReviewsActivity.class))
+        );
 
 
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        // Ovdje možeš prikazati ime korisnika ako koristiš SharedPreferences
+
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
