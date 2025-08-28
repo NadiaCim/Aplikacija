@@ -12,7 +12,12 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "restaurants.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
+    private static final String TBL_USERS = "users";
+    private static final String U_ID      = "id";
+    private static final String U_EMAIL   = "email";
+    private static final String U_PASS    = "password";
+    private static final String U_CREATED = "created_at";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -28,23 +33,39 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "location TEXT NOT NULL, " +
                 "rating REAL NOT NULL)");
 
-        // Tablica korisnika
-        db.execSQL("CREATE TABLE IF NOT EXISTS users (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "name TEXT NOT NULL, " +
-                "email TEXT NOT NULL UNIQUE, " +
-                "password TEXT NOT NULL)");
 
         // Seed pri prvoj kreaciji
         seedIfEmpty(db);
+        // Tablica korisnika
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS " + TBL_USERS + " (" +
+                        U_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        U_EMAIL + " TEXT NOT NULL UNIQUE, " +
+                        U_PASS + " TEXT NOT NULL, " +
+                        U_CREATED + " INTEGER NOT NULL)"
+        );
+
+        // Indeksi za users
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_users_email ON " + TBL_USERS + "(" + U_EMAIL + ")");
+
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS restaurants");
-        db.execSQL("DROP TABLE IF EXISTS users");
         onCreate(db);
-    }
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS " + TBL_USERS + " (" +
+                        U_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        U_EMAIL + " TEXT NOT NULL UNIQUE, " +
+                        U_PASS + " TEXT NOT NULL, " +
+                        U_CREATED + " INTEGER NOT NULL)"
+        );
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_users_email ON " + TBL_USERS + "(" + U_EMAIL + ")");
+
+
+}
 
     // SEED
 
@@ -173,13 +194,43 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
     //login provjera
-    public boolean checkLogin(String email, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE email=? AND password=?",
-                new String[]{email, password});
-        boolean ok = cursor.moveToFirst();
-        cursor.close();
-        db.close();
-        return ok;
+    public enum AuthResult {
+        NEW_USER,    // korisnik je kreiran (prvi login)
+        OK,          // korisnik postoji i lozinka je ispravna
+        WRONG_PASS   // korisnik postoji ali lozinka ne valja
     }
+
+    /**
+     * Pokuša prijaviti korisnika. Ako ne postoji -> kreira ga.
+     * @return NEW_USER | OK | WRONG_PASS
+     */
+    public AuthResult loginOrCreateUser(String emailRaw, String password) {
+        if (emailRaw == null) emailRaw = "";
+        if (password == null) password = "";
+        final String email = emailRaw.trim().toLowerCase();
+
+        SQLiteDatabase db = getWritableDatabase();
+
+        // Postoji li korisnik?
+        String sql = "SELECT " + U_PASS + " FROM " + TBL_USERS + " WHERE " + U_EMAIL + " = ?";
+        try (Cursor c = db.rawQuery(sql, new String[]{ email })) {
+            if (c.moveToFirst()) {
+                String stored = c.getString(0);
+                if (stored != null && stored.equals(password)) {
+                    return AuthResult.OK; // točna lozinka
+                } else {
+                    return AuthResult.WRONG_PASS; // postoji, ali lozinka pogrešna
+                }
+            }
+        }
+
+        // Ne postoji -> kreiraj
+        ContentValues cv = new ContentValues();
+        cv.put(U_EMAIL, email);
+        cv.put(U_PASS, password);
+        cv.put(U_CREATED, System.currentTimeMillis());
+        db.insert(TBL_USERS, null, cv);
+        return AuthResult.NEW_USER;
+    }
+
 }
