@@ -1,4 +1,4 @@
-package com.example.androidproject;
+package com.example.androidproject.db;
 
 public class Restaurant {
     private int id;
