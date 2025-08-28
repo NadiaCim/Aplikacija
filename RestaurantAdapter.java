@@ -41,8 +41,6 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
         holder.textName.setText(r.getName());
         holder.textLocation.setText(r.getLocation());
         holder.textRating.setText("Ocjena: " + r.getRating());
-
-        // ✅ Postavi sliku prema NAZIVU ili TIPU
         holder.imageRestaurant.setImageResource(pickImage(r));
     }
 
@@ -64,7 +62,7 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
         }
     }
 
-    // --- Mapiranje na drawables (po imenu i/ili po tipu) ---
+    // Mapiranje na drawables
     private int pickImage(Restaurant r) {
         String name = safe(r.getName());
         String type = safe(r.getType());
@@ -98,7 +96,7 @@ public class RestaurantAdapter extends RecyclerView.Adapter<RestaurantAdapter.Vi
         if (s == null) return "";
         s = s.trim().toLowerCase();
 
-        // gruba normalizacija dijakritike koja nam treba za naše tipove
+        // ispravak slova
         s = s.replace("č","c").replace("ć","c").replace("đ","dj")
                 .replace("š","s").replace("ž","z");
         return s;
