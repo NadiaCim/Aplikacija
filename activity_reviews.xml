@@ -6,24 +6,57 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <!-- Naslov -->
-    <TextView
-        android:id="@+id/screenTitle"
+    <!-- NASLOV -->
+    <LinearLayout
+        android:id="@+id/headerBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#EAC260"
+        android:gravity="center_vertical"
         android:paddingStart="16dp"
+        android:paddingTop="16dp"
         android:paddingEnd="16dp"
-        android:paddingTop="14dp"
-        android:paddingBottom="14dp"
-        android:text="Najbolji restorani po gradovima"
-        android:textStyle="bold"
-        android:textSize="22sp"
-        android:textColor="#EAC260"/>
+        android:paddingBottom="16dp">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#D0D7E2" />
+        <ImageView
+            android:id="@+id/headerIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:contentDescription="@string/app_name" />
+
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/screenTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Najbolji restorani"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/screenSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="0.9"
+                android:text="Top #1 po svakom gradu"
+                android:textColor="@color/white"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- tanki razdjelnik -->
+<View
+android:layout_width="match_parent"
+android:layout_height="1dp"
+android:background="#20000000" />
 
     <!-- Empty state -->
     <TextView
