@@ -20,7 +20,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Tablica restorana (SVI imaju samo JEDAN tip)
+        // Tablica restorana
         db.execSQL("CREATE TABLE IF NOT EXISTS restaurants (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL, " +
@@ -28,7 +28,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "location TEXT NOT NULL, " +
                 "rating REAL NOT NULL)");
 
-        // Tablica korisnika (ako koristiš login)
+        // Tablica korisnika
         db.execSQL("CREATE TABLE IF NOT EXISTS users (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL, " +
@@ -46,9 +46,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // —— SEED ——
+    // SEED
 
-    // Javna bezparametarska (za poziv iz aktivnosti)
     public void seedIfEmpty() {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -58,7 +57,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Privatna s otvorenom konekcijom (poziva se i iz onCreate)
+
     private void seedIfEmpty(SQLiteDatabase db) {
         int count = 0;
         Cursor c = db.rawQuery("SELECT COUNT(*) FROM restaurants", null);
@@ -66,7 +65,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         c.close();
 
         if (count == 0) {
-            // ⬇️ SVAKI restoran ima SAMO JEDAN tip (mora se poklapati sa spinnerom)
+
             insertRestaurant(db, "McDonald's",      "Burger",   "Zagreb", 4.2f);
             insertRestaurant(db, "KFC",             "Burger",   "Split",  4.0f);
             insertRestaurant(db, "Burger King",     "Burger",   "Osijek", 4.3f);
@@ -104,7 +103,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert("restaurants", null, cv);
     }
 
-    // (po potrebi) javni insert iz aktivnosti
     public void insertRestaurant(String name, String type, String location, float rating) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -114,7 +112,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // —— UPITI ——
+    // UPITI
 
     public List<Restaurant> getAllRestaurants() {
         List<Restaurant> restaurants = new ArrayList<>();
@@ -142,7 +140,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return restaurants;
     }
-    // === NOVO: #1 restoran po svakom gradu (ne dira postojeći kod) ===
+
     public List<Restaurant> fetchTopPerCity() {
         SQLiteDatabase db = getReadableDatabase();
         String sql =
@@ -174,7 +172,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    // (opcionalno) login provjera
+    //login provjera
     public boolean checkLogin(String email, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT id FROM users WHERE email=? AND password=?",
