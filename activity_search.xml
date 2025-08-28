@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Glavni stupčasti container; centriramo sadržaj i ograničavamo maksimalnu širinu djece -->
+    <!-- Glavni stupčasti container -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -14,7 +14,7 @@
         android:layout_marginBottom="56dp"
         android:gravity="center_horizontal">
 
-        <!-- Lokacija (touch target >= 48dp, max širina 600dp) -->
+        <!-- Lokacija -->
         <EditText
             android:id="@+id/etLocation"
             android:layout_width="match_parent"
@@ -31,7 +31,7 @@
             android:textColorHint="#888"
             android:textSize="16sp" />
 
-        <!-- Spinner za ukuse (touch target >= 48dp, max širina 600dp) -->
+        <!-- Spinner za ukuse -->
         <Spinner
             android:id="@+id/spinnerCategory"
             android:layout_width="match_parent"
@@ -45,7 +45,7 @@
             android:paddingBottom="10dp"
             android:layout_marginTop="12dp" />
 
-        <!-- Gumb za pretragu (ograničena širina radi tablet layouta) -->
+        <!-- Gumb za pretragu  -->
         <Button
             android:id="@+id/btnSearch"
             android:layout_width="match_parent"
@@ -58,7 +58,7 @@
             android:backgroundTint="#DD6941"
             android:textColor="#FFFFFF" />
 
-        <!-- Lista restorana (također ograničena širina radi validacije na >600dp) -->
+        <!-- Lista restorana  -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
@@ -70,7 +70,7 @@
             android:clipToPadding="false"
             android:paddingBottom="8dp" />
 
-        <!-- Prazna lista (ograničena širina, centriran tekst) -->
+        <!-- Prazna lista -->
         <TextView
             android:id="@+id/tvEmpty"
             android:layout_width="match_parent"
@@ -86,7 +86,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- Donja navigacija (zadržavamo — upozorenje za >600dp ćemo “ugasiti” time što je glavni sadržaj max 600dp) -->
+    <!-- Donja navigacija -->
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bottomNavigationView"
         android:layout_width="match_parent"
