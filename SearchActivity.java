@@ -126,6 +126,7 @@ public class SearchActivity extends AppCompatActivity {
                 overridePendingTransition(0, 0);
                 return true;
             } else if (id == R.id.nav_search) {
+                // Trenutna aktivnost
                 return true;
             } else if (id == R.id.nav_profile) {
                 startActivity(new Intent(this, LoginActivity.class));
