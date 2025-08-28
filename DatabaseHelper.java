@@ -12,7 +12,12 @@ import java.util.List;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "restaurants.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
+    private static final String TBL_USERS = "users";
+    private static final String U_ID      = "id";
+    private static final String U_EMAIL   = "email";
+    private static final String U_PASS    = "password";
+    private static final String U_CREATED = "created_at";
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -20,7 +25,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // Tablica restorana (SVI imaju samo JEDAN tip)
+        // Tablica restorana
         db.execSQL("CREATE TABLE IF NOT EXISTS restaurants (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT NOT NULL, " +
@@ -28,27 +33,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "location TEXT NOT NULL, " +
                 "rating REAL NOT NULL)");
 
-        // Tablica korisnika (ako koristiš login)
-        db.execSQL("CREATE TABLE IF NOT EXISTS users (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                "name TEXT NOT NULL, " +
-                "email TEXT NOT NULL UNIQUE, " +
-                "password TEXT NOT NULL)");
 
         // Seed pri prvoj kreaciji
         seedIfEmpty(db);
+        // Tablica korisnika
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS " + TBL_USERS + " (" +
+                        U_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        U_EMAIL + " TEXT NOT NULL UNIQUE, " +
+                        U_PASS + " TEXT NOT NULL, " +
+                        U_CREATED + " INTEGER NOT NULL)"
+        );
+
+        // Indeksi za users
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_users_email ON " + TBL_USERS + "(" + U_EMAIL + ")");
+
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS restaurants");
-        db.execSQL("DROP TABLE IF EXISTS users");
         onCreate(db);
-    }
+        db.execSQL(
+                "CREATE TABLE IF NOT EXISTS " + TBL_USERS + " (" +
+                        U_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                        U_EMAIL + " TEXT NOT NULL UNIQUE, " +
+                        U_PASS + " TEXT NOT NULL, " +
+                        U_CREATED + " INTEGER NOT NULL)"
+        );
+        db.execSQL("CREATE INDEX IF NOT EXISTS idx_users_email ON " + TBL_USERS + "(" + U_EMAIL + ")");
 
-    // —— SEED ——
 
-    // Javna bezparametarska (za poziv iz aktivnosti)
+}
+
+    // SEED
+
     public void seedIfEmpty() {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -58,7 +78,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // Privatna s otvorenom konekcijom (poziva se i iz onCreate)
+
     private void seedIfEmpty(SQLiteDatabase db) {
         int count = 0;
         Cursor c = db.rawQuery("SELECT COUNT(*) FROM restaurants", null);
@@ -66,7 +86,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         c.close();
 
         if (count == 0) {
-            // ⬇️ SVAKI restoran ima SAMO JEDAN tip (mora se poklapati sa spinnerom)
+
             insertRestaurant(db, "McDonald's",      "Burger",   "Zagreb", 4.2f);
             insertRestaurant(db, "KFC",             "Burger",   "Split",  4.0f);
             insertRestaurant(db, "Burger King",     "Burger",   "Osijek", 4.3f);
@@ -104,7 +124,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert("restaurants", null, cv);
     }
 
-    // (po potrebi) javni insert iz aktivnosti
     public void insertRestaurant(String name, String type, String location, float rating) {
         SQLiteDatabase db = this.getWritableDatabase();
         try {
@@ -114,7 +133,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    // —— UPITI ——
+    // UPITI
 
     public List<Restaurant> getAllRestaurants() {
         List<Restaurant> restaurants = new ArrayList<>();
@@ -142,7 +161,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return restaurants;
     }
-    // === NOVO: #1 restoran po svakom gradu (ne dira postojeći kod) ===
+
     public List<Restaurant> fetchTopPerCity() {
         SQLiteDatabase db = getReadableDatabase();
         String sql =
@@ -174,14 +193,44 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    // (opcionalno) login provjera
-    public boolean checkLogin(String email, String password) {
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT id FROM users WHERE email=? AND password=?",
-                new String[]{email, password});
-        boolean ok = cursor.moveToFirst();
-        cursor.close();
-        db.close();
-        return ok;
+    //login provjera
+    public enum AuthResult {
+        NEW_USER,    // korisnik je kreiran (prvi login)
+        OK,          // korisnik postoji i lozinka je ispravna
+        WRONG_PASS   // korisnik postoji ali lozinka ne valja
     }
+
+    /**
+     * Pokuša prijaviti korisnika. Ako ne postoji -> kreira ga.
+     * @return NEW_USER | OK | WRONG_PASS
+     */
+    public AuthResult loginOrCreateUser(String emailRaw, String password) {
+        if (emailRaw == null) emailRaw = "";
+        if (password == null) password = "";
+        final String email = emailRaw.trim().toLowerCase();
+
+        SQLiteDatabase db = getWritableDatabase();
+
+        // Postoji li korisnik?
+        String sql = "SELECT " + U_PASS + " FROM " + TBL_USERS + " WHERE " + U_EMAIL + " = ?";
+        try (Cursor c = db.rawQuery(sql, new String[]{ email })) {
+            if (c.moveToFirst()) {
+                String stored = c.getString(0);
+                if (stored != null && stored.equals(password)) {
+                    return AuthResult.OK; // točna lozinka
+                } else {
+                    return AuthResult.WRONG_PASS; // postoji, ali lozinka pogrešna
+                }
+            }
+        }
+
+        // Ne postoji -> kreiraj
+        ContentValues cv = new ContentValues();
+        cv.put(U_EMAIL, email);
+        cv.put(U_PASS, password);
+        cv.put(U_CREATED, System.currentTimeMillis());
+        db.insert(TBL_USERS, null, cv);
+        return AuthResult.NEW_USER;
+    }
+
 }
