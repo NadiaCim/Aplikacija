@@ -2,10 +2,12 @@ package com.example.androidproject;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.androidproject.db.DatabaseHelper;
@@ -13,59 +15,78 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class LoginActivity extends AppCompatActivity {
 
-    EditText etEmail, etPassword;
-    Button btnLogin;
-    DatabaseHelper dbHelper;
-    BottomNavigationView bottomNavigationView;
+    private EditText etEmail, etPassword;
+    private Button btnLogin;
+    private DatabaseHelper db;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
         etEmail = findViewById(R.id.etEmailLogin);
         etPassword = findViewById(R.id.etPasswordLogin);
         btnLogin = findViewById(R.id.btnLogin);
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        dbHelper = new DatabaseHelper(this);
+        db = new DatabaseHelper(this);
 
         btnLogin.setOnClickListener(v -> {
-            String email = etEmail.getText().toString().trim();
-            String password = etPassword.getText().toString().trim();
+            String email = etEmail.getText() != null ? etEmail.getText().toString().trim() : "";
+            String pass  = etPassword.getText() != null ? etPassword.getText().toString().trim() : "";
 
-            if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Unesite email i lozinku", Toast.LENGTH_SHORT).show();
+            if (TextUtils.isEmpty(email)) {
+                etEmail.setError("Unesite email");
+                etEmail.requestFocus();
+                return;
+            }
+            if (TextUtils.isEmpty(pass)) {
+                etPassword.setError("Unesite lozinku");
+                etPassword.requestFocus();
                 return;
             }
 
-            boolean valid = dbHelper.checkLogin(email, password);
-            if (valid) {
-                Toast.makeText(this, "Prijava uspješna!", Toast.LENGTH_SHORT).show();
-                startActivity(new Intent(this, MainActivity.class));
-                finish();
-            } else {
-                Toast.makeText(this, "Neispravni podaci", Toast.LENGTH_SHORT).show();
+            DatabaseHelper.AuthResult res = db.loginOrCreateUser(email, pass);
+            switch (res) {
+                case NEW_USER:
+                    showMsg("Dobrodošli u TasteTest");
+                    // mali delay da korisnik vidi poruku
+                    v.postDelayed(() -> goHome(), 1200);
+                    break;
+                case OK:
+                    showMsg("Prijavljeni ste");
+                    v.postDelayed(() -> goHome(), 1200);
+                    break;
+                case WRONG_PASS:
+                    showMsg("Neispravni unos.");
+                    // kod krive lozinke NE navigiramo
+                    break;
             }
         });
 
-        bottomNavigationView.setSelectedItemId(R.id.nav_profile);
+        // bottom nav
+        BottomNavigationView bottomNav = findViewById(R.id.bottomNavigationView);
+        if (bottomNav != null) {
+            bottomNav.setOnItemSelectedListener(item -> {
+                int id = item.getItemId();
+                if (id == R.id.nav_home) {
+                    startActivity(new Intent(this, MainActivity.class));
+                    return true;
+                } else if (id == R.id.nav_search) {
+                    startActivity(new Intent(this, SearchActivity.class));
+                    return true;
+                } else if (id == R.id.nav_profile) {
+                    return true;
+                }
+                return false;
+            });
+        }
+    }
 
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
+    private void goHome() {
+        startActivity(new Intent(this, MainActivity.class));
+        finish();
+    }
 
-            if (id == R.id.nav_home) {
-                startActivity(new Intent(this, MainActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (id == R.id.nav_search) {
-                startActivity(new Intent(this, SearchActivity.class));
-                overridePendingTransition(0, 0);
-                return true;
-            } else if (id == R.id.nav_profile) {
-                return true; // već si na login/profil ekranu
-            }
-
-            return false;
-        });
+    private void showMsg(String text) {
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show();
     }
 }
